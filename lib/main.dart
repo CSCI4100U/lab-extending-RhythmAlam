@@ -206,11 +206,20 @@ class ListGradesState extends State<ListGrades> {
   int? _selectedIndex;
   List<Grade> _grades = [];
   bool _sortAscending = true;
+  final TextEditingController _filter = TextEditingController();
+  String _searchText = "";
 
   @override
   void initState() {
     super.initState();
     refreshGrades();
+    _filter.addListener(_searchListener);
+  }
+
+  void _searchListener() {
+    setState(() {
+      _searchText = _filter.text;
+    });
   }
 
   Future refreshGrades() async {
@@ -220,6 +229,11 @@ class ListGradesState extends State<ListGrades> {
 
   @override
   Widget build(BuildContext context) {
+    List<Grade> filteredGrades = _grades.where((grade) {
+      return grade.sid!.toLowerCase().contains(_searchText.toLowerCase()) ||
+          grade.grade!.toLowerCase().contains(_searchText.toLowerCase());
+    }).toList();
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Forms and SQLite'),
@@ -237,44 +251,59 @@ class ListGradesState extends State<ListGrades> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.file_upload), // Icon for importing CSV
+            icon: Icon(Icons.file_upload),
             onPressed: () {
               _importCSV(context);
             },
           ),
           IconButton(
-            icon: Icon(Icons.lightbulb), // Icon for importing CSV
+            icon: Icon(Icons.lightbulb),
             onPressed: () {
-              // Call toggleDarkMode when the IconButton is pressed
               _MyAppState parent = context.findAncestorStateOfType<_MyAppState>()!;
               parent.toggleDarkMode();
             },
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: _grades.length,
-        itemBuilder: (context, index) {
-          return Dismissible(
-            key: Key(_grades[index].id.toString()),
-            onDismissed: (direction) {
-              _deleteGrade(_grades[index].id!);
-            },
-            background: Container(
-              color: Colors.red,
-              child: Icon(Icons.delete),
-            ),
-            child: InkWell(
-              onLongPress: () {
-                _editGrade(_grades[index]);
-              },
-              child: ListTile(
-                title: Text(_grades[index].sid ?? ''),
-                subtitle: Text(_grades[index].grade ?? ''),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _filter,
+              decoration: InputDecoration(
+                labelText: 'Search',
+                prefixIcon: Icon(Icons.search),
               ),
             ),
-          );
-        },
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: filteredGrades.length,
+              itemBuilder: (context, index) {
+                return Dismissible(
+                  key: Key(filteredGrades[index].id.toString()),
+                  onDismissed: (direction) {
+                    _deleteGrade(filteredGrades[index].id!);
+                  },
+                  background: Container(
+                    color: Colors.red,
+                    child: Icon(Icons.delete),
+                  ),
+                  child: InkWell(
+                    onLongPress: () {
+                      _editGrade(filteredGrades[index]);
+                    },
+                    child: ListTile(
+                      title: Text(filteredGrades[index].sid ?? ''),
+                      subtitle: Text(filteredGrades[index].grade ?? ''),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -286,7 +315,6 @@ class ListGradesState extends State<ListGrades> {
         child: Icon(Icons.add),
       ),
     );
-
   }
 
   void _importCSV(BuildContext context) async {
@@ -323,29 +351,6 @@ class ListGradesState extends State<ListGrades> {
       );
     }
   }
-
-  // void _importCSV(BuildContext context) async {
-  //   // Check and request storage permission
-  //   var status = await Permission.storage.status;
-  //   if (status.isDenied) {
-  //     await Permission.storage.request();
-  //     status = await Permission.storage.status;
-  //   }
-  //
-  //   if (status.isGranted) {
-  //     FilePickerResult? result = await FilePicker.platform.pickFiles(
-  //       type: FileType.custom,
-  //       allowedExtensions: ['csv'],
-  //     );
-  //
-  //     if (result != null) {
-  //       // Your existing code for processing the CSV file...
-  //     }
-  //   } else {
-  //     // Handle the case when the user denies the storage permission
-  //     print('Storage permission denied');
-  //   }
-  // }
   void _deleteGrade(int id) {
     GradesModel.instance.delete(id);
     refreshGrades();

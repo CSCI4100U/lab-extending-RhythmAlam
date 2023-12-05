@@ -13,4 +13,4 @@ Done - (2 marks) Add an icon to the appBar that shows a `DataTable`, which gener
 Done - (3 marks) Add an icon to the appBar that enables a user to import a .csv file from local files to populate the list of grades. The csv file should have 2 columns (sid, grade) and append all new grades to the existing list of grades.
 
 Done - (4 marks) Add two more features of your choice other than those listed here. Mention these features explicitly in your README.md.
-
+            Dark mode and search function
