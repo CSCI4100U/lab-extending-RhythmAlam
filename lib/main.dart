@@ -36,6 +36,7 @@ class _FrequencyChartState extends State<FrequencyChart> {
     );
   }
 
+
   List<charts.Series<Grade, String>> generateChartData() {
     // Sort grades by grade value in ascending order
     widget.grades!.sort((a, b) => a.grade!.compareTo(b.grade!));
@@ -71,19 +72,26 @@ void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool isDarkMode = false;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.deepPurple),
-          primaryColor: Colors.deepPurple,
-        ),
-        home: const ListGrades()
+      title: 'Flutter Demo',
+      theme: isDarkMode ? ThemeData.dark() : ThemeData.light(),
+      home: const ListGrades(),
     );
+  }
+  void toggleDarkMode() {
+    setState(() {
+      isDarkMode = !isDarkMode; // Toggle the value of isDarkMode
+    });
   }
 }
 
@@ -234,6 +242,14 @@ class ListGradesState extends State<ListGrades> {
               _importCSV(context);
             },
           ),
+          IconButton(
+            icon: Icon(Icons.lightbulb), // Icon for importing CSV
+            onPressed: () {
+              // Call toggleDarkMode when the IconButton is pressed
+              _MyAppState parent = context.findAncestorStateOfType<_MyAppState>()!;
+              parent.toggleDarkMode();
+            },
+          ),
         ],
       ),
       body: ListView.builder(
@@ -272,6 +288,7 @@ class ListGradesState extends State<ListGrades> {
     );
 
   }
+
   void _importCSV(BuildContext context) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
